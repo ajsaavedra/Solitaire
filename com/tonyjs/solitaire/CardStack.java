@@ -34,7 +34,7 @@ public class CardStack {
 			}
 		}
 	}
-	
+
 	public int size() {
 		return cards.size();
 	}
@@ -47,7 +47,28 @@ public class CardStack {
 		return stackHeight;
 	}
 	
+	public void setXY(int x, int y) {
+		this.stackWidth = x;
+		this.stackHeight = y;
+	}
+	
 	public void clear() {
 		cards.clear();
+	}
+	
+	public CardWithImage getLast() {
+		return cards.get(cards.size() - 1);
+	}
+	
+	public CardWithImage getCard(int i) {
+		return cards.get(i);
+	}
+	
+	public void setNull(int i) {
+		cards.set(i, null);
+	}
+	
+	public void removeLast() {
+		cards.remove(cards.size() - 1);
 	}
 }

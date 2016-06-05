@@ -7,7 +7,7 @@ public class Deck {
 			"Nine", "Ten", "Jack", "Queen", "King"
 	};
 	private static final String  SUITS[] = {"Spades", "Hearts", "Diamonds", "Clubs"};
-	private static final int[] VALUES = {1,2,3,4,5,6,7,8,9,10,10,10,10};
+	private static final int[] VALUES = {1,2,3,4,5,6,7,8,9,10,11,12,13};
 	private int nextCardPosition;
 	private CardWithImage[] deckOfCards;
 
@@ -46,8 +46,29 @@ public class Deck {
 		System.out.println("Error: index of next card in deck is out of range.");
 		return null;
 	}
-	
+
 	public int cardsLeft() {
 		return 52 - nextCardPosition;
+	}
+
+	public static boolean canBeStacked(String movingSuit, String topSuit) {
+		if (topSuit == "Hearts") {
+			if (movingSuit == "Clubs" || movingSuit == "Spades") {
+				return true;
+			}
+		} else if (topSuit == "Spades") {
+			if (movingSuit == "Hearts" || movingSuit == "Diamonds") {
+				return true;
+			}
+		} else if (topSuit == "Clubs") {
+			if (movingSuit == "Hearts" || movingSuit == "Diamonds") {
+				return true;
+			}
+		} else if (topSuit == "Diamonds") {
+			if (movingSuit == "Spades" || movingSuit == "Clubs") {
+				return true;
+			}
+		}
+		return false;
 	}
 }
