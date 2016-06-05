@@ -37,8 +37,8 @@ public class CardWithImage extends Card {
 	}
 	
 	public static void drawOutline(Graphics g, int x, int y) {
-		g.setColor(Color.BLACK);
-		g.drawRoundRect(x, y, CARDWIDTH, CARDHEIGHT, 8, 8);
+		g.setColor(new Color(255, 255, 255, 80));
+		g.fillRoundRect(x, y, CARDWIDTH, CARDHEIGHT, 8, 8);
 	}
 	
 	public int getX() {

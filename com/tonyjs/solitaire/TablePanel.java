@@ -21,6 +21,7 @@ public class TablePanel extends JPanel {
 	private static final int OVERLAP = (int) (CARDHEIGHT * .20);
 	private CardStack[] foundation = new CardStack[4];
 	private CardStack[] column = new CardStack[7];
+	private CardStack pile;
 	private Deck deck;
 	private CardWithImage card;
 	
@@ -39,9 +40,13 @@ public class TablePanel extends JPanel {
 			x += CARDWIDTH + SPACING;
 		}
 		
+		x = 10; y = 10;
+		pile = new CardStack(x, y, 0);
+
 		deck = new Deck();
 		deck.shuffle();
 		deal();
+		setPile();
 	}
 	
 	public void deal() {
@@ -58,6 +63,14 @@ public class TablePanel extends JPanel {
 		repaint();
 	}
 	
+	public void setPile() {
+		int i = 0;
+		while (i++ < deck.cardsLeft()) {
+			card = deck.deal(false);
+			pile.add(card);
+		}
+	}
+
 	public void paintComponent(Graphics g) {
 		g.setColor(new Color(25, 177, 104));
 		g.fillRect(0, 0, WIDTH, HEIGHT);
@@ -75,6 +88,8 @@ public class TablePanel extends JPanel {
 		for (int i = 0; i < 7; i++) {
 			column[i].draw(g);
 		}
+
+		pile.draw(g);
 	}
 	
 	public Dimension getPreferredSize() {
