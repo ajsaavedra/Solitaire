@@ -6,7 +6,6 @@ import java.awt.Graphics;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
-import java.util.ArrayList;
 
 import javax.swing.JPanel;
 
@@ -17,7 +16,7 @@ public class TablePanel extends JPanel {
 	private static final int SPACING = 4;
 	private static final int MARGIN = 10;
 	private static final int WIDTH = 8*CARDWIDTH + 12*SPACING + 2*MARGIN;
-	private static final int HEIGHT = 5*CARDHEIGHT + 3*MARGIN;
+	private static final int HEIGHT = (int)(4.5*CARDHEIGHT + 3*MARGIN);
 	private static final int FOUNDATIONX = WIDTH/2;
 	private static final int FOUNDATIONY = MARGIN;
 	private static final int BOARDX = (int) (MARGIN*12.5); 
@@ -25,8 +24,10 @@ public class TablePanel extends JPanel {
 	private static final int OVERLAP = (int) (CARDHEIGHT * .20);
 	private CardStack[] foundation = new CardStack[4];
 	private CardStack[] column = new CardStack[7];
-	private CardStack pileFaceDown, pileFaceUp, movingCards;
+	private CardStack pile, tempPile, movingCards;
 	private Deck deck;
+	boolean fromPile = false;
+	boolean toPile = false;
 	private CardWithImage card;
 	private int mouseX = 0;
 	private int mouseY = 0;
@@ -48,13 +49,14 @@ public class TablePanel extends JPanel {
 		}
 
 		x = 10; y = 10;
-		pileFaceDown = new CardStack(x, y, 0);
-		pileFaceUp = new CardStack(x*2 + CARDWIDTH, y, 0);
+		pile = new CardStack(x, y, 0);
+		tempPile = new CardStack(0,0,0);
 		movingCards = new CardStack(x, y, OVERLAP);
 
 		deck = new Deck();
 		deck.shuffle();
 		deal();
+
 		setPile();
 
 		// Mouse listeners
@@ -98,11 +100,11 @@ public class TablePanel extends JPanel {
 	}
 
 	public void setPile() {
-		int i = 0;
-		while (i++ < 24) {
-			card = deck.deal(false);
-			pileFaceDown.add(card);
+		while (deck.cardsLeft() > 0) {
+			card = deck.deal(true);
+			pile.add(card);
 		}
+		repaint();
 	}
 
 	public void paintComponent(Graphics g) {
@@ -122,10 +124,8 @@ public class TablePanel extends JPanel {
 		for (int i = 0; i < 7; i++) {
 			column[i].draw(g);
 		}
-		pileFaceDown.draw(g);
-
+		pile.draw(g);
 		movingCards.draw(g);
-
 	}
 
 	public Dimension getPreferredSize() {
@@ -142,10 +142,8 @@ public class TablePanel extends JPanel {
 					if (card.isFaceUp()) {
 						if (card.contains(x, y)) {
 							movingCards.add(card);
-							mouseX = x;
-							mouseY = y;
-							y += OVERLAP;
-							fromCol = col;
+							mouseX = x; mouseY = y;
+							y += OVERLAP; fromCol = col;
 						}
 					}
 					iter++;
@@ -161,6 +159,21 @@ public class TablePanel extends JPanel {
 					iter--;
 				}
 			}
+		}
+
+		if (pile.size() > 0) {
+			card = pile.getLast();
+			if (card.contains(x, y)) {
+				movingCards.add(card);
+				fromPile = true;
+				mouseX = x; mouseY = y;
+			}
+		} else {
+			for (int i = tempPile.size() - 1; i >= 0; i--) {
+				movingCards.add(tempPile.getCard(i));
+			}
+			toPile = true;
+//			mouseX = x; mouseY = y;
 		}
 	}
 
@@ -178,13 +191,20 @@ public class TablePanel extends JPanel {
 	}
 
 	private void released(int x, int y) {
+		if (toPile) {
+			for (int i = 0; i < movingCards.size(); i++) {
+				pile.add(movingCards.getCard(i));
+			}
+			toPile = false;
+			movingCards.clear();
+		}
 		if (movingCards.size() > 0) {
 			boolean validMove = false;
-			for (int i = 0; i < 4 && !validMove; i++) {
+			for (int i = 0; i < 4 && !validMove; i++) {// Adding a card to the foundation
 				int foundationx = foundation[i].getX();
 				int foundationy = foundation[i].getY();
 				CardWithImage cardMoving = movingCards.getCard(0);
-				if (!cardMoving.isNear(foundationx, foundationy)) { // FIX
+				if (!cardMoving.isNear(foundationx, foundationy)) {
 					if (foundation[i].size() == 0) {
 						if (cardMoving.getRank() == "Ace") {
 							validMove = true;
@@ -208,7 +228,7 @@ public class TablePanel extends JPanel {
 					}
 				}
 			}
-			for (int l = 0; l < 7 && !validMove; l++) {
+			for (int l = 0; l < 7 && !validMove; l++) {// Adding a card on a column
 				CardWithImage cardMoving = movingCards.getCard(0);
 				if (column[l].size() > 0) { // can only place opposite color and value+1 on top
 					Card card = column[l].getLast();
@@ -238,14 +258,20 @@ public class TablePanel extends JPanel {
 				}
 			}
 
-			if (!validMove) {
+			if (fromPile && !validMove) {
+				tempPile.add(pile.getLast());
+				pile.removeLast();
+				fromPile = false;
+			} else if (fromPile && validMove) {
+				pile.removeLast();
+				fromPile = false;
+			} else if (!validMove) {
 				for (int k = 0; k< movingCards.size(); k++) {
 					column[fromCol].add(movingCards.getCard(k));
 				}
-				movingCards.clear();
 			}
-			repaint();
+			movingCards.clear();
 		}
-
+		repaint();
 	}
 }
