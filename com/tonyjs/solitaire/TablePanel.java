@@ -25,10 +25,9 @@ public class TablePanel extends JPanel {
 	private static final int OVERLAP = (int) (CARDHEIGHT * .20);
 	private CardStack[] foundation = new CardStack[4];
 	private CardStack[] column = new CardStack[7];
-	private CardStack pileFaceDown, pileFaceUp;
+	private CardStack pileFaceDown, pileFaceUp, movingCards;
 	private Deck deck;
 	private CardWithImage card;
-	private CardWithImage movingCard;
 	private int mouseX = 0;
 	private int mouseY = 0;
 	private int fromCol = 0;
@@ -51,6 +50,7 @@ public class TablePanel extends JPanel {
 		x = 10; y = 10;
 		pileFaceDown = new CardStack(x, y, 0);
 		pileFaceUp = new CardStack(x*2 + CARDWIDTH, y, 0);
+		movingCards = new CardStack(x, y, OVERLAP);
 
 		deck = new Deck();
 		deck.shuffle();
@@ -62,6 +62,7 @@ public class TablePanel extends JPanel {
 			public void mousePressed(MouseEvent e) {
 				int x = e.getX();
 				int y = e.getY();
+				movingCards.setXY(x, y);
 				clicked(x, y);
 			}
 
@@ -123,9 +124,8 @@ public class TablePanel extends JPanel {
 		}
 		pileFaceDown.draw(g);
 
-		if (movingCard != null) {
-			movingCard.draw(g);
-		}
+		movingCards.draw(g);
+
 	}
 
 	public Dimension getPreferredSize() {
@@ -133,57 +133,74 @@ public class TablePanel extends JPanel {
 	}
 
 	private void clicked(int x, int y) {
-		movingCard = null;
-		for (int col = 0; col < 7 && movingCard == null; col++) {
+		movingCards.clear();
+		for (int col = 0; col < 7 && movingCards.size() == 0; col++) {
 			if (column[col].size() > 0) {
-				CardWithImage card = column[col].getLast();
-				if (card.contains(x, y)) {
-					movingCard = card;
-					mouseX = x;
-					mouseY = y;
-					column[col].removeLast();
-					fromCol = col;
+				int iter = 0;
+				while (iter < column[col].size()) {
+					card = column[col].getCard(iter);
+					if (card.isFaceUp()) {
+						if (card.contains(x, y)) {
+							movingCards.add(card);
+							mouseX = x;
+							mouseY = y;
+							y += OVERLAP;
+							fromCol = col;
+						}
+					}
+					iter++;
+				}
+				iter = column[col].size() - 1;
+				while (iter >= 0) {
+					card = column[col].getCard(iter);
+					if (card.isFaceUp()) {
+						if (card.contains(x, y)) {
+							column[col].remove(iter);
+						}
+					}
+					iter--;
 				}
 			}
 		}
 	}
 
 	private void dragged(int x, int y) {
-		if (movingCard != null) {
+		if (movingCards.size() > 0) {
 			int changeX = x - mouseX;
 			int changeY = y - mouseY;
-			movingCard.addToXY(changeX, changeY);
+			for (int i = 0; i < movingCards.size(); i++) {
+				movingCards.getCard(i).addToXY(changeX, changeY);
+			}
 			mouseX = x;
 			mouseY = y;
 			repaint();
 		}
-
 	}
 
 	private void released(int x, int y) {
-
-		if (movingCard != null) {
+		if (movingCards.size() > 0) {
 			boolean validMove = false;
 			for (int i = 0; i < 4 && !validMove; i++) {
 				int foundationx = foundation[i].getX();
 				int foundationy = foundation[i].getY();
-				if (!movingCard.isNear(foundationx, foundationy)) { // FIX
+				CardWithImage cardMoving = movingCards.getCard(0);
+				if (!cardMoving.isNear(foundationx, foundationy)) { // FIX
 					if (foundation[i].size() == 0) {
-						if (movingCard.getRank() == "Ace") {
+						if (cardMoving.getRank() == "Ace") {
 							validMove = true;
-							foundation[i].add(movingCard);
-							movingCard = null;
+							foundation[i].add(cardMoving);
+							movingCards.clear();
 							if (column[fromCol].size() > 0) {
 								column[fromCol].getLast().setFaceUp(true);
 							}
 						}
 					} else {
 						CardWithImage topCard = foundation[i].getLast();
-						if (movingCard.getSuit() == topCard.getSuit()
-								&& movingCard.getValue() == topCard.getValue() + 1) {
+						if (cardMoving.getSuit() == topCard.getSuit()
+								&& cardMoving.getValue() == topCard.getValue() + 1) {
 							validMove = true;
-							foundation[i].add(movingCard);
-							movingCard = null;
+							foundation[i].add(cardMoving);
+							movingCards.clear();
 							if (column[fromCol].size() > 0) {
 								column[fromCol].getLast().setFaceUp(true);
 							}
@@ -191,27 +208,44 @@ public class TablePanel extends JPanel {
 					}
 				}
 			}
-			for (int i = 0; i < 7 && !validMove; i++) {
-				if (column[i].size() > 0) {
-					Card card = column[i].getLast();
-					if (movingCard.getValue() == card.getValue() - 1) {
-						if (Deck.canBeStacked(card.getSuit(), movingCard.getSuit())) {
+			for (int l = 0; l < 7 && !validMove; l++) {
+				CardWithImage cardMoving = movingCards.getCard(0);
+				if (column[l].size() > 0) { // can only place opposite color and value+1 on top
+					Card card = column[l].getLast();
+					if (cardMoving.getValue() == card.getValue() - 1) {
+						if (Deck.canBeStacked(card.getSuit(), cardMoving.getSuit())) {
 							validMove = true;
-							column[i].add(movingCard);
-							movingCard = null;
+							for (int i = 0; i < movingCards.size(); i++) {
+								column[l].add(movingCards.getCard(i));
+							}
+							movingCards.clear();
 							if (column[fromCol].size() > 0) {
 								column[fromCol].getLast().setFaceUp(true);
 							}
+						}
+					}
+				} else { // can only place King on empty stack
+					if (cardMoving.getRank() == "King") {
+						validMove = true;
+						for (int i = 0; i < movingCards.size(); i++) {
+							column[l].add(movingCards.getCard(i));
+						}
+						movingCards.clear();
+						if (column[fromCol].size() > 0) {
+							column[fromCol].getLast().setFaceUp(true);
 						}
 					}
 				}
 			}
 
 			if (!validMove) {
-				column[fromCol].add(movingCard);
-				movingCard = null;
+				for (int k = 0; k< movingCards.size(); k++) {
+					column[fromCol].add(movingCards.getCard(k));
+				}
+				movingCards.clear();
 			}
 			repaint();
 		}
+
 	}
 }

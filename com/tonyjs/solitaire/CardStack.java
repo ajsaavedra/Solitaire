@@ -64,8 +64,8 @@ public class CardStack {
 		return cards.get(i);
 	}
 	
-	public void setNull(int i) {
-		cards.set(i, null);
+	public void remove(int i) {
+		cards.remove(i);
 	}
 	
 	public void removeLast() {
