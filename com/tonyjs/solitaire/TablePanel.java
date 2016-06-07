@@ -235,6 +235,7 @@ public class TablePanel extends JPanel {
 								if (column[fromCol].size() > 0) {
 									column[fromCol].getLast().setFaceUp(true);
 								}
+								SoundEffect.playCardFlipEffect();
 							}
 						} else {
 							CardWithImage topCard = foundation[i].getLast();
@@ -246,6 +247,7 @@ public class TablePanel extends JPanel {
 								if (column[fromCol].size() > 0) {
 									column[fromCol].getLast().setFaceUp(true);
 								}
+								SoundEffect.playCardFlipEffect();
 								isGameOver();
 							}
 						}
@@ -265,6 +267,7 @@ public class TablePanel extends JPanel {
 								if (column[fromCol].size() > 0) {
 									column[fromCol].getLast().setFaceUp(true);
 								}
+								SoundEffect.playCardFlipEffect();
 							}
 						}
 					} else { // can only place King on empty stack
@@ -277,6 +280,7 @@ public class TablePanel extends JPanel {
 							if (column[fromCol].size() > 0) {
 								column[fromCol].getLast().setFaceUp(true);
 							}
+							SoundEffect.playCardFlipEffect();
 						}
 					}
 				}
@@ -295,6 +299,7 @@ public class TablePanel extends JPanel {
 								if (column[fromCol].size() > 0) {
 									column[fromCol].getLast().setFaceUp(true);
 								}
+								SoundEffect.playCardFlipEffect();
 							}
 						}
 					} else { // can only place King on empty stack
@@ -307,6 +312,7 @@ public class TablePanel extends JPanel {
 							if (column[fromCol].size() > 0) {
 								column[fromCol].getLast().setFaceUp(true);
 							}
+							SoundEffect.playCardFlipEffect();
 						}
 					}
 				}

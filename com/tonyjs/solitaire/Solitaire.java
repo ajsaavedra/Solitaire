@@ -38,6 +38,7 @@ public class Solitaire extends JFrame {
 		newGameButton.setFocusable(false);
 		newGameButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				SoundEffect.playRedealEffect();
 				tablePanel.newGame();
 			}
 		});
