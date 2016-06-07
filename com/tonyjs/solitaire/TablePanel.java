@@ -190,6 +190,15 @@ public class TablePanel extends JPanel {
 				}
 			}
 		}
+		//Clicking on the waste pile
+		if (wastePile.size() > 0) {
+			card = wastePile.getLast();
+			if (card.contains(x, y)) {
+				movingCards.add(card);
+				fromWastePile = true;
+				mouseX = x; mouseY = y;
+			}
+		}
 		// Clicking on the stock pile
 		if (stockPile.size() > 0) {
 			card = stockPile.getLast();
@@ -198,6 +207,7 @@ public class TablePanel extends JPanel {
 				movingCards.add(card);
 				fromStockPile = true;
 				mouseX = x; mouseY = y;
+				repaint();
 			}
 		} else {// Replenish stock
 			if (x >= stockPile.getX() && x <= stockPile.getX() + CARDHEIGHT
@@ -207,16 +217,6 @@ public class TablePanel extends JPanel {
 				}
 				toStockPile = true;
 				wastePile.clear();
-			}
-		}
-
-		//Clicking on the waste pile
-		if (wastePile.size() > 0) {
-			card = wastePile.getLast();
-			if (card.contains(x, y)) {
-				movingCards.add(card);
-				fromWastePile = true;
-				mouseX = x; mouseY = y;
 			}
 		}
 	}
