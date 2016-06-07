@@ -107,6 +107,8 @@ public class TablePanel extends JPanel {
 		for (int i = 0; i < 7; i++) {
 			column[i].clear();
 		}
+		pile.clear();
+		tempPile.clear();
 	}
 
 	public void setPile() {
