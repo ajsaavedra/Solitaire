@@ -22,6 +22,13 @@ public class CardStack {
 		cards.add(card);
 	}
 	
+	public void add(int index, CardWithImage card) {
+		int cardx = stackWidth;
+		int cardy = stackHeight + overlap * cards.size();
+		card.setXY(cardx, cardy);
+		cards.add(index, card);
+	}
+	
 	public void draw(Graphics g) {
 		if (cards.size() > 0 && overlap == 0) {
 			int lastIndex = cards.size() - 1;

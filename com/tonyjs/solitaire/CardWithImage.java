@@ -14,6 +14,7 @@ public class CardWithImage extends Card {
 	private Image image;
 	private static final int CARDHEIGHT = 142;
 	private static final int CARDWIDTH = 100;
+	private static final int OVERLAP = (int) (CARDHEIGHT * .20);
 	private int width = 0;
 	private int height = 0;
 	private int x = 0;
@@ -71,6 +72,42 @@ public class CardWithImage extends Card {
 
 	public static int getCardWidth() {
 		return CARDWIDTH;
+	}
+
+	public boolean contains(int pointX, int pointY, int colSize, boolean isLast) {
+		boolean contains = false;
+		if (isLast) {
+			if (colSize == 0) {// if just grabbing the last card
+				if (pointX >= x 
+						&& pointX <= x + width
+						&& pointY >= y
+						&& pointY <= y + height) {
+					contains = true;
+				}
+			} else {// if other cards above the last one are grabbed
+				if (pointX >= x 
+						&& pointX <= x + width
+						&& pointY <= y + height + OVERLAP * colSize) {
+					contains = true;
+				}
+			}
+		} else {
+			if (colSize == 0) {//if grabbing more than one
+				if (pointX >= x 
+						&& pointX <= x + width
+						&& pointY >= y
+						&& pointY <= y + OVERLAP) {
+					contains = true;
+				}
+			} else {//if grabbed more than one
+				if (pointX >= x 
+						&& pointX <= x + width
+						&& pointY <= y + height + OVERLAP * colSize) {
+					contains = true;
+				}
+			}
+		}
+		return contains;
 	}
 
 	public boolean contains(int pointX, int pointY) {

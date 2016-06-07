@@ -9,10 +9,11 @@ public class Deck {
 	private static final String  SUITS[] = {"Spades", "Hearts", "Diamonds", "Clubs"};
 	private static final int[] VALUES = {1,2,3,4,5,6,7,8,9,10,11,12,13};
 	private int nextCardPosition;
-	private CardWithImage[] deckOfCards;
+	private CardWithImage[] deckOfCards, deckCopy;
 
 	public Deck() {
 		deckOfCards = new CardWithImage[52];
+		deckCopy = new CardWithImage[52];
 		for (int position = 0; position < deckOfCards.length; position++) {
 			deckOfCards[position] = 
 					new CardWithImage(RANKS[position%13], SUITS[position/13],  VALUES[position%13]);
@@ -70,5 +71,12 @@ public class Deck {
 			}
 		}
 		return false;
+	}
+	
+	public void copyFrom(Deck deck) {
+		nextCardPosition = 0;
+		for (int i = 0; i < 52; i++) {
+			deckCopy[i] = deck.deckOfCards[i];
+		}
 	}
 }
