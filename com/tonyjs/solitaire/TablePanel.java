@@ -25,10 +25,11 @@ public class TablePanel extends JPanel {
 	private static final int OVERLAP = (int) (CARDHEIGHT * .20);
 	private CardStack[] foundation = new CardStack[4];
 	private CardStack[] column = new CardStack[7];
-	private CardStack pile, tempPile, movingCards;
+	private CardStack stockPile, wastePile, movingCards;
 	private Deck deck, saveDeck;
-	private boolean fromPile = false;
-	private boolean toPile = false;
+	private boolean fromStockPile = false;
+	private boolean fromWastePile = false;
+	private boolean toStockPile = false;
 	private boolean GAME_OVER = false;
 	private CardWithImage card;
 	private int mouseX = 0;
@@ -51,8 +52,8 @@ public class TablePanel extends JPanel {
 		}
 
 		x = 10; y = 10;
-		pile = new CardStack(x, y, 0);
-		tempPile = new CardStack(0,0,0);
+		stockPile = new CardStack(x, y, 0);
+		wastePile = new CardStack((int)(x*12.5),y,0);
 		movingCards = new CardStack(x, y, OVERLAP);
 
 		newGame();
@@ -107,14 +108,14 @@ public class TablePanel extends JPanel {
 		for (int i = 0; i < 7; i++) {
 			column[i].clear();
 		}
-		pile.clear();
-		tempPile.clear();
+		stockPile.clear();
+		wastePile.clear();
 	}
 
-	public void setPile() {
+	public void setStockPile() {
 		while (deck.cardsLeft() > 0) {
-			card = deck.deal(true);
-			pile.add(card);
+			card = deck.deal(false);
+			stockPile.add(card);
 		}
 		repaint();
 	}
@@ -136,7 +137,18 @@ public class TablePanel extends JPanel {
 		for (int i = 0; i < 7; i++) {
 			column[i].draw(g);
 		}
-		pile.draw(g);
+
+		if (stockPile.size() > 0) {
+			stockPile.draw(g);
+		} else {
+			CardWithImage.drawOutline(g, stockPile.getX(), stockPile.getY());
+		}
+
+		if (wastePile.size() > 0) {
+			wastePile.draw(g);
+		} else {
+			CardWithImage.drawOutline(g, wastePile.getX(), wastePile.getY());
+		}
 		movingCards.draw(g);
 	}
 
@@ -178,22 +190,33 @@ public class TablePanel extends JPanel {
 				}
 			}
 		}
-
-		if (pile.size() > 0) {
-			card = pile.getLast();
+		// Clicking on the stock pile
+		if (stockPile.size() > 0) {
+			card = stockPile.getLast();
 			if (card.contains(x, y)) {
+				card.setFaceUp(true);
 				movingCards.add(card);
-				fromPile = true;
+				fromStockPile = true;
 				mouseX = x; mouseY = y;
 			}
-		} else {
-			if (x >= pile.getX() && x <= pile.getX() + CARDHEIGHT
-					&& y >= pile.getY() && y <= pile.getY() + CARDWIDTH) {
-				for (int i = tempPile.size() - 1; i >= 0; i--) {
-					movingCards.add(tempPile.getCard(i));
+		} else {// Replenish stock
+			if (x >= stockPile.getX() && x <= stockPile.getX() + CARDHEIGHT
+					&& y >= stockPile.getY() && y <= stockPile.getY() + CARDWIDTH) {
+				for (int i = wastePile.size() - 1; i >= 0; i--) {
+					movingCards.add(wastePile.getCard(i));
 				}
-				toPile = true;
-				tempPile.clear();
+				toStockPile = true;
+				wastePile.clear();
+			}
+		}
+
+		//Clicking on the waste pile
+		if (wastePile.size() > 0) {
+			card = wastePile.getLast();
+			if (card.contains(x, y)) {
+				movingCards.add(card);
+				fromWastePile = true;
+				mouseX = x; mouseY = y;
 			}
 		}
 	}
@@ -212,12 +235,19 @@ public class TablePanel extends JPanel {
 	}
 
 	private void released(int x, int y) {
-		if (toPile) {
+		if (toStockPile) {
 			for (int i = 0; i < movingCards.size(); i++) {
-				pile.add(movingCards.getCard(i));
+				movingCards.getCard(i).setFaceUp(false);
+				stockPile.add(movingCards.getCard(i));
 			}
-			toPile = false;
+			toStockPile = false;
 			movingCards.clear();
+		} else if (fromStockPile) {
+			SoundEffect.playCardFlipEffect();
+			wastePile.add(movingCards.getCard(0));
+			stockPile.removeLast();
+			movingCards.clear();
+			fromStockPile = false;
 		}
 		if (movingCards.size() > 0) {
 			boolean validMove = false;
@@ -317,14 +347,12 @@ public class TablePanel extends JPanel {
 					}
 				}
 			}
-
-			if (fromPile && !validMove) {
-				tempPile.add(pile.getLast());
-				pile.removeLast();
-				fromPile = false;
-			} else if (fromPile && validMove) {
-				pile.removeLast();
-				fromPile = false;
+			if (fromWastePile && !validMove) {
+				wastePile.add(movingCards.getCard(0));
+				fromWastePile = false;
+			} else if (fromWastePile && validMove) {
+				wastePile.removeLast();
+				fromWastePile = false;
 			} else if (!validMove) {
 				for (int k = 0; k< movingCards.size(); k++) {
 					column[fromCol].add(movingCards.getCard(k));
@@ -359,12 +387,12 @@ public class TablePanel extends JPanel {
 		deck.shuffle();
 		saveDeck.copyFrom(deck);
 		dealCards();
-		setPile();
+		setStockPile();
 	}
 
 	public void replay() {
 		deck.copyFrom(saveDeck);
 		dealCards();
-		setPile();
+		setStockPile();
 	}
 }
