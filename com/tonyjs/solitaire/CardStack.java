@@ -34,6 +34,8 @@ public class CardStack {
 			int lastIndex = cards.size() - 1;
 			CardWithImage card = cards.get(lastIndex);
 			card.draw(g);
+		} else if (cards.size() == 0 && overlap == 0) {
+			CardWithImage.drawOutline(g, this.getX(), this.getY());
 		} else {
 			for (int i = 0; i < cards.size(); i++) {
 				CardWithImage card = cards.get(i);

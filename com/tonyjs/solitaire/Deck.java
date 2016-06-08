@@ -12,6 +12,7 @@ public class Deck {
 	private CardWithImage[] deckOfCards, deckCopy;
 
 	public Deck() {
+		CardWithImage.setBackImage();
 		deckOfCards = new CardWithImage[52];
 		deckCopy = new CardWithImage[52];
 		for (int position = 0; position < deckOfCards.length; position++) {
@@ -39,7 +40,6 @@ public class Deck {
 	}
 
 	public CardWithImage deal(boolean faceUpValue) {
-
 		if (nextCardPosition > -1 && nextCardPosition < deckOfCards.length) {
 			deckOfCards[nextCardPosition].setFaceUp(faceUpValue);
 			return deckOfCards[nextCardPosition++];

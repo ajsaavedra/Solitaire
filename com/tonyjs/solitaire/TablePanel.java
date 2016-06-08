@@ -27,9 +27,7 @@ public class TablePanel extends JPanel {
 	private CardStack[] column = new CardStack[7];
 	private CardStack stockPile, wastePile, movingCards;
 	private Deck deck, saveDeck;
-	private boolean fromStockPile = false;
 	private boolean fromWastePile = false;
-	private boolean toStockPile = false;
 	private boolean GAME_OVER = false;
 	private CardWithImage card;
 	private int mouseX = 0;
@@ -53,7 +51,7 @@ public class TablePanel extends JPanel {
 
 		x = 10; y = 10;
 		stockPile = new CardStack(x, y, 0);
-		wastePile = new CardStack((int)(x*12.5),y,0);
+		wastePile = new CardStack((int)(x*12.5), y, 0);
 		movingCards = new CardStack(x, y, OVERLAP);
 
 		newGame();
@@ -138,17 +136,8 @@ public class TablePanel extends JPanel {
 			column[i].draw(g);
 		}
 
-		if (stockPile.size() > 0) {
-			stockPile.draw(g);
-		} else {
-			CardWithImage.drawOutline(g, stockPile.getX(), stockPile.getY());
-		}
-
-		if (wastePile.size() > 0) {
-			wastePile.draw(g);
-		} else {
-			CardWithImage.drawOutline(g, wastePile.getX(), wastePile.getY());
-		}
+		stockPile.draw(g);
+		wastePile.draw(g);
 		movingCards.draw(g);
 	}
 
@@ -190,8 +179,18 @@ public class TablePanel extends JPanel {
 				}
 			}
 		}
-		//Clicking on the waste pile
-		if (wastePile.size() > 0) {
+
+		if (stockPile.size() > 0) {// Clicking on the stock pile
+			card = stockPile.getLast();
+			if (card.contains(x, y)) {
+				SoundEffect.playCardFlipEffect();
+				stockPile.removeLast();
+				card.setFaceUp(true);
+				wastePile.add(card);
+//				paintImmediately(stockPile.getX(), stockPile.getY(), CARDWIDTH, CARDHEIGHT);
+			}
+		}
+		if (wastePile.size() > 0) {// Clicking on the waste pile
 			card = wastePile.getLast();
 			if (card.contains(x, y)) {
 				movingCards.add(card);
@@ -199,23 +198,13 @@ public class TablePanel extends JPanel {
 				mouseX = x; mouseY = y;
 			}
 		}
-		// Clicking on the stock pile
-		if (stockPile.size() > 0) {
-			card = stockPile.getLast();
-			if (card.contains(x, y)) {
-				card.setFaceUp(true);
-				movingCards.add(card);
-				fromStockPile = true;
-				mouseX = x; mouseY = y;
-				repaint();
-			}
-		} else {// Replenish stock
-			if (x >= stockPile.getX() && x <= stockPile.getX() + CARDHEIGHT
-					&& y >= stockPile.getY() && y <= stockPile.getY() + CARDWIDTH) {
+		if (stockPile.size() == 0 && wastePile.size() >= 1){// Replenish stock
+			if (x >= stockPile.getX() && x <= stockPile.getX() + CARDHEIGHT) {
 				for (int i = wastePile.size() - 1; i >= 0; i--) {
-					movingCards.add(wastePile.getCard(i));
+					wastePile.getCard(i).setFaceUp(false);
+					stockPile.add(wastePile.getCard(i));
 				}
-				toStockPile = true;
+//				paintImmediately(stockPile.getX(), stockPile.getY(), CARDWIDTH, CARDHEIGHT);
 				wastePile.clear();
 			}
 		}
@@ -235,20 +224,6 @@ public class TablePanel extends JPanel {
 	}
 
 	private void released(int x, int y) {
-		if (toStockPile) {
-			for (int i = 0; i < movingCards.size(); i++) {
-				movingCards.getCard(i).setFaceUp(false);
-				stockPile.add(movingCards.getCard(i));
-			}
-			toStockPile = false;
-			movingCards.clear();
-		} else if (fromStockPile) {
-			SoundEffect.playCardFlipEffect();
-			wastePile.add(movingCards.getCard(0));
-			stockPile.removeLast();
-			movingCards.clear();
-			fromStockPile = false;
-		}
 		if (movingCards.size() > 0) {
 			boolean validMove = false;
 			if (movingCards.size() == 1) {
@@ -353,6 +328,7 @@ public class TablePanel extends JPanel {
 			} else if (fromWastePile && validMove) {
 				wastePile.removeLast();
 				fromWastePile = false;
+				paintImmediately(wastePile.getX(), wastePile.getY(), CARDWIDTH, CARDHEIGHT);
 			} else if (!validMove) {
 				for (int k = 0; k< movingCards.size(); k++) {
 					column[fromCol].add(movingCards.getCard(k));
@@ -372,7 +348,8 @@ public class TablePanel extends JPanel {
 
 		if (GAME_OVER) {
 			String message = "You won! Play again?";
-			int option = JOptionPane.showConfirmDialog(null, message);
+			int option = JOptionPane.showConfirmDialog(null, message,
+					"Quit Game", JOptionPane.YES_NO_OPTION);
 			if (option == JOptionPane.YES_OPTION) {
 				newGame();
 			} else {

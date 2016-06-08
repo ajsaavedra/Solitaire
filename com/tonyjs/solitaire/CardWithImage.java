@@ -2,16 +2,14 @@ package com.tonyjs.solitaire;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
-import javax.swing.ImageIcon;
+import javax.imageio.ImageIO;
 
 public class CardWithImage extends Card {
 	final static String sep = java.io.File.separator;
-	private static final ImageIcon cardBackImage = 
-			new ImageIcon("cards" + sep + "cardBack.png");
-	private ImageIcon myImage;
-	private Image image;
 	private static final int CARDHEIGHT = 142;
 	private static final int CARDWIDTH = 100;
 	private static final int OVERLAP = (int) (CARDHEIGHT * .20);
@@ -19,28 +17,45 @@ public class CardWithImage extends Card {
 	private int height = 0;
 	private int x = 0;
 	private int y = 0;
+	private BufferedImage imageBuffered, retrievedImage;
+	private static BufferedImage cardBackImage;
+	
+	
+	public static void setBackImage() {
+		try {
+			cardBackImage = ImageIO.read(new File("cards" + sep + "cardBack.png"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	public CardWithImage(String theRank, String theSuit, int theValue) {
 		super(theRank, theSuit, theValue);
-		myImage = new ImageIcon("cards" + sep + theRank + theSuit + ".png");
-		this.image = getImageFromIcon();
+		try {
+			imageBuffered = ImageIO.read(new File("cards" + sep + theRank + theSuit + ".png"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public CardWithImage(String theRank, String theSuit) {
 		super(theRank, theSuit);
-		myImage = new ImageIcon("cards" + sep + theRank + theSuit + ".png");
-		this.image = getImageFromIcon();
+		try {
+			imageBuffered = ImageIO.read(new File("cards" + sep + theRank + theSuit + ".png"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
-	public Image getImageFromIcon() {
-		return isFaceUp() ? ((ImageIcon)myImage).getImage() : ((ImageIcon)cardBackImage).getImage();
+	public BufferedImage getImageFromIcon() {
+		return isFaceUp() ? imageBuffered : cardBackImage;
 	}
 
 	public void draw(Graphics g) {
-		image = getImageFromIcon();
-		this.width = image.getWidth(null);
-		this.height = image.getHeight(null);
-		g.drawImage(image, x, y, null);
+		retrievedImage = getImageFromIcon();
+		this.width = retrievedImage.getWidth(null);
+		this.height = retrievedImage.getHeight(null);
+		g.drawImage(retrievedImage, x, y, null);
 	}
 
 	public static void drawOutline(Graphics g, int x, int y) {
