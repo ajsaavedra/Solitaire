@@ -136,7 +136,13 @@ public class TablePanel extends JPanel {
 		for (int i = 0; i < 7; i++) {
 			column[i].draw(g);
 		}
-		pile.draw(g);
+
+		if (pile.size() > 0) {
+			pile.draw(g);
+		} else {
+			CardWithImage.drawOutline(g, pile.getX(), pile.getY());
+		}
+
 		movingCards.draw(g);
 	}
 
